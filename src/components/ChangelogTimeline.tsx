@@ -108,7 +108,8 @@ const ChangelogTimeline = ({ refreshTrigger, categoryFilter, searchQuery }: Chan
         const searchTerm = searchQuery.toLowerCase().trim();
         entriesWithProfiles = entriesWithProfiles.filter(entry =>
           entry.title.toLowerCase().includes(searchTerm) ||
-          entry.description.toLowerCase().includes(searchTerm)
+          entry.description.toLowerCase().includes(searchTerm) ||
+          (entry.profiles?.display_name && entry.profiles.display_name.toLowerCase().includes(searchTerm))
         );
       }
 

@@ -131,7 +131,7 @@ const Header = ({ onAddEntry, onFilterChange, currentFilter, onSearchChange, sea
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             type="text"
-            placeholder="Search changelog entries..."
+            placeholder="Search by title, description, or author..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="pl-10 pr-10 bg-secondary/50 border-secondary"
