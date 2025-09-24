@@ -8,11 +8,33 @@ import { Loader2, LogIn, UserPlus } from "lucide-react";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const { toast } = useToast();
+
+  const handleAzureAuth = async () => {
+    setOauthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Azure authentication failed",
+        description: error.message,
+      });
+      setOauthLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +163,38 @@ const Auth = () => {
                 {isSignUp ? "Create Account" : "Sign In"}
               </Button>
             </form>
+            
+            <div className="mt-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-secondary" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAzureAuth}
+                disabled={oauthLoading}
+                className="w-full mt-4 bg-secondary/50 border-secondary hover:bg-secondary/70"
+              >
+                {oauthLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <svg className="w-4 h-4 mr-2" viewBox="0 0 23 23">
+                    <path fill="#f35325" d="M1 1h10v10H1z"/>
+                    <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                    <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                    <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                  </svg>
+                )}
+                Continue with Microsoft
+              </Button>
+            </div>
+            
             <div className="mt-6 text-center">
               <button
                 type="button"
