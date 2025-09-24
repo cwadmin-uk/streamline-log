@@ -12,6 +12,7 @@ const Index = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Get initial session
@@ -54,6 +55,8 @@ const Index = () => {
         onAddEntry={() => setShowAddForm(true)}
         onFilterChange={setCategoryFilter}
         currentFilter={categoryFilter}
+        onSearchChange={setSearchQuery}
+        searchQuery={searchQuery}
       />
       
       <main className="max-w-4xl mx-auto px-6 py-8">
@@ -69,6 +72,7 @@ const Index = () => {
         <ChangelogTimeline
           refreshTrigger={refreshTrigger}
           categoryFilter={categoryFilter}
+          searchQuery={searchQuery}
         />
       </main>
     </div>

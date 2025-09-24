@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { 
   Plus, 
   LogOut, 
@@ -10,7 +11,9 @@ import {
   Bug, 
   TrendingUp, 
   Shield,
-  History
+  History,
+  Search,
+  X
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -23,6 +26,8 @@ interface HeaderProps {
   onAddEntry: () => void;
   onFilterChange: (category: string) => void;
   currentFilter: string;
+  onSearchChange: (search: string) => void;
+  searchQuery: string;
 }
 
 const categoryFilters = [
@@ -33,8 +38,17 @@ const categoryFilters = [
   { value: "security", label: "Security", icon: Shield },
 ];
 
-const Header = ({ onAddEntry, onFilterChange, currentFilter }: HeaderProps) => {
+const Header = ({ onAddEntry, onFilterChange, currentFilter, onSearchChange, searchQuery }: HeaderProps) => {
   const [loading, setLoading] = useState(false);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim().slice(0, 100); // Limit to 100 chars for security
+    onSearchChange(value);
+  };
+
+  const clearSearch = () => {
+    onSearchChange("");
+  };
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -46,7 +60,7 @@ const Header = ({ onAddEntry, onFilterChange, currentFilter }: HeaderProps) => {
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-secondary/50">
-      <div className="max-w-4xl mx-auto px-6 py-4">
+      <div className="max-w-4xl mx-auto px-6 py-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
@@ -111,6 +125,29 @@ const Header = ({ onAddEntry, onFilterChange, currentFilter }: HeaderProps) => {
               <span className="sr-only">Sign out</span>
             </Button>
           </div>
+        </div>
+        
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            type="text"
+            placeholder="Search changelog entries..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="pl-10 pr-10 bg-secondary/50 border-secondary"
+            maxLength={100}
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSearch}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-secondary"
+            >
+              <X className="w-4 h-4" />
+              <span className="sr-only">Clear search</span>
+            </Button>
+          )}
         </div>
       </div>
     </header>

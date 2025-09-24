@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 interface ChangelogTimelineProps {
   refreshTrigger: number;
   categoryFilter?: string;
+  searchQuery?: string;
 }
 
 interface Entry {
@@ -21,7 +22,7 @@ interface Entry {
   } | null;
 }
 
-const ChangelogTimeline = ({ refreshTrigger, categoryFilter }: ChangelogTimelineProps) => {
+const ChangelogTimeline = ({ refreshTrigger, categoryFilter, searchQuery }: ChangelogTimelineProps) => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -54,7 +55,7 @@ const ChangelogTimeline = ({ refreshTrigger, categoryFilter }: ChangelogTimeline
 
   useEffect(() => {
     fetchEntries();
-  }, [refreshTrigger, categoryFilter]);
+  }, [refreshTrigger, categoryFilter, searchQuery]);
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -96,11 +97,20 @@ const ChangelogTimeline = ({ refreshTrigger, categoryFilter }: ChangelogTimeline
         .in("user_id", uniqueUserIds);
 
       // Merge entries with profile data
-      const entriesWithProfiles: Entry[] = entriesData.map(entry => ({
+      let entriesWithProfiles: Entry[] = entriesData.map(entry => ({
         ...entry,
         category: entry.category as "feature" | "bugfix" | "improvement" | "security",
         profiles: profilesData?.find(profile => profile.user_id === entry.user_id) || null
       }));
+
+      // Apply search filter on client side for better UX
+      if (searchQuery && searchQuery.trim()) {
+        const searchTerm = searchQuery.toLowerCase().trim();
+        entriesWithProfiles = entriesWithProfiles.filter(entry =>
+          entry.title.toLowerCase().includes(searchTerm) ||
+          entry.description.toLowerCase().includes(searchTerm)
+        );
+      }
 
       setEntries(entriesWithProfiles);
     } catch (error: any) {
@@ -163,8 +173,10 @@ const ChangelogTimeline = ({ refreshTrigger, categoryFilter }: ChangelogTimeline
         </h3>
         <p className="text-sm text-muted-foreground">
           {categoryFilter && categoryFilter !== "all" 
-            ? `No ${categoryFilter} entries found. Try a different filter.`
-            : "Be the first to add a changelog entry!"
+            ? `No ${categoryFilter} entries found${searchQuery ? ` matching "${searchQuery}"` : ''}. Try adjusting your filters.`
+            : searchQuery 
+              ? `No entries found matching "${searchQuery}". Try a different search term.`
+              : "Be the first to add a changelog entry!"
           }
         </p>
       </div>
