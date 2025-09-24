@@ -199,6 +199,19 @@ const ChangelogTimeline = ({ refreshTrigger, categoryFilter, searchQuery }: Chan
           onDelete={handleDelete}
         />
       ))}
+      
+      <div className="mt-12 pt-8 border-t border-secondary/50">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/30 rounded-full">
+            <div className="w-2 h-2 bg-gradient-primary rounded-full animate-pulse" />
+            <span className="text-sm text-muted-foreground">
+              {entries.length === 1 ? '1 total change' : `${entries.length} total changes`}
+              {searchQuery && ` matching "${searchQuery}"`}
+              {categoryFilter && categoryFilter !== "all" && ` in ${categoryFilter}`}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
