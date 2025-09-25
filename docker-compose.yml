@@ -7,7 +7,7 @@ services:
         - VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uYWxseXJwcGlvd3BoZ2huamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NDk2MzAsImV4cCI6MjA3NDIyNTYzMH0.vvb0CVJK_Fjp86rqimIg_4BRvVesUcK7-Q396sEsYKs
         - VITE_SUPABASE_URL=https://nnallyrppiowphghnjet.supabase.co
     ports:
-      - "3001:80"
+      - "3000:80"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
