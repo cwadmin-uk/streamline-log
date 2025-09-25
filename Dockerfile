@@ -13,6 +13,16 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Set build arguments for environment variables
+ARG VITE_SUPABASE_PROJECT_ID
+ARG VITE_SUPABASE_PUBLISHABLE_KEY  
+ARG VITE_SUPABASE_URL
+
+# Set environment variables for build
+ENV VITE_SUPABASE_PROJECT_ID=$VITE_SUPABASE_PROJECT_ID
+ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+
 # Build the application
 RUN npm run build
 
