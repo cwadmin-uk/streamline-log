@@ -2,7 +2,7 @@ services:
   changelog:
     build: .
     ports:
-      - "3000:80"
+      - "3001:80"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
