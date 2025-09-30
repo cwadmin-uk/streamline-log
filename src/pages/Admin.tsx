@@ -1,41 +1,67 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Users, Key, Settings, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Shield, Users, Key } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import AccountManagement from "@/components/admin/AccountManagement";
+import SSOConfiguration from "@/components/admin/SSOConfiguration";
+import SecuritySettings from "@/components/admin/SecuritySettings";
 
 const Admin = () => {
-  const [session, setSession] = useState<Session | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    checkAdminAccess();
   }, []);
 
-  const { isAdmin, loading: roleLoading } = useUserRole(session?.user?.id);
+  const checkAdminAccess = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/");
+        return;
+      }
 
-  useEffect(() => {
-    if (!loading && !roleLoading && !isAdmin) {
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!roles) {
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "You don't have admin privileges.",
+        });
+        navigate("/");
+        return;
+      }
+
+      setIsAdmin(true);
+    } catch (error: any) {
+      console.error("Error checking admin access:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to verify admin access.",
+      });
       navigate("/");
+    } finally {
+      setLoading(false);
     }
-  }, [isAdmin, loading, roleLoading, navigate]);
+  };
 
-  if (loading || roleLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -49,68 +75,55 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary">
-      <header className="border-b border-secondary/50 bg-card/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to App
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
-              <h1 className="text-2xl font-bold">Admin Portal</h1>
-            </div>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-6 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/")}
+            className="hover:bg-secondary/50"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Admin Portal
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage users, security, and system configuration
+            </p>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Link to="/admin/accounts">
-            <Card className="h-full hover:shadow-glow transition-shadow cursor-pointer border-secondary/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <CardTitle>Account Management</CardTitle>
-                <CardDescription>
-                  View and manage user accounts, assign roles, and control access
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+        <Tabs defaultValue="accounts" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="accounts" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Account Management
+            </TabsTrigger>
+            <TabsTrigger value="sso" className="flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              SSO Configuration
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Security Settings
+            </TabsTrigger>
+          </TabsList>
 
-          <Link to="/admin/sso">
-            <Card className="h-full hover:shadow-glow transition-shadow cursor-pointer border-secondary/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
-                  <Key className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <CardTitle>SSO Configuration</CardTitle>
-                <CardDescription>
-                  Configure Single Sign-On providers and authentication settings
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+          <TabsContent value="accounts">
+            <AccountManagement />
+          </TabsContent>
 
-          <Link to="/admin/security">
-            <Card className="h-full hover:shadow-glow transition-shadow cursor-pointer border-secondary/50 bg-card/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
-                  <Settings className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <CardTitle>Security Settings</CardTitle>
-                <CardDescription>
-                  Manage security permissions, policies, and access controls
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        </div>
-      </main>
+          <TabsContent value="sso">
+            <SSOConfiguration />
+          </TabsContent>
+
+          <TabsContent value="security">
+            <SecuritySettings />
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
