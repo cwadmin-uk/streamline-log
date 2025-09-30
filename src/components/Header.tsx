@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -40,6 +42,15 @@ const categoryFilters = [
 
 const Header = ({ onAddEntry, onFilterChange, currentFilter, onSearchChange, searchQuery }: HeaderProps) => {
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id);
+    });
+  }, []);
+
+  const { isAdmin } = useUserRole(userId);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.trim().slice(0, 100); // Limit to 100 chars for security
@@ -105,6 +116,15 @@ const Header = ({ onAddEntry, onFilterChange, currentFilter, onSearchChange, sea
                 })}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {isAdmin && (
+              <Link to="/admin">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Button>
+              </Link>
+            )}
 
             <Button
               onClick={onAddEntry}
